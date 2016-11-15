@@ -104,16 +104,11 @@ public:
 
     bool check_date(user &get_user) const {
         for (auto owns_id = get_user.get_owns().begin(); owns_id != get_user.get_owns().end(); owns_id++) {
+            cout << *owns_id << endl;
             for (auto book = books.begin(); book != books.end(); book++) {
-                if (book->get_owner() == get_user.get_id()) {
-                    struct tm *current_time = new tm;
-                    time_t raw_time;
-                    time(&raw_time);
-                    current_time = localtime(&raw_time);
-                    struct tm *book_time = new tm;
-                    book_time = localtime(&book->get_owned_date_time_t());
-                    cout << "Curr=" << current_time->tm_mon << " saved=" << book_time->tm_mon << endl;
-                    if (current_time->tm_mon - book_time->tm_mon > 0) return false;
+                if (book->get_id() == *owns_id) {
+                    //2628002.88 - число секунд в месяце
+                    if (difftime(time(0), book->get_owned_date_time_t()) / 2628002.88 >= 1) return false;
                 }
             }
         }
@@ -196,10 +191,12 @@ public:
                 book temp(get_data);
                 lib.get_books().push_back(temp);
                 lib.get_books().back().assign_owner(lib.get_users().back().get_id());
-                lib.get_users().back().add_book(lib.get_books().back().get_id());
             } else if (type == "user_id") {
                 lib.get_users().back().set_id(get_data);
             } else if (type == "book_id") {
+                lib.get_books().back().set_id(get_data);
+                lib.get_users().back().add_book(lib.get_books().back().get_id());
+            } else if (type == "book_free_book_id") {
                 lib.get_books().back().set_id(get_data);
             } else if (type == "time") {
                 stringstream ss(get_data);
@@ -219,7 +216,9 @@ public:
             }
         }
 
-        file.close();
+        file.
+
+                close();
     }
 
     void write_on_disc(string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data.txt") {
@@ -240,7 +239,7 @@ public:
 
         for (auto it = lib.get_books().begin(); it != lib.get_books().end(); it++)
             if (it->is_free())
-                file << "\nbook_free_book=" << it->get_name() << "\nbook_id=" << it->get_id();
+                file << "\nbook_free_book=" << it->get_name() << "\nbook_free_book_id=" << it->get_id();
         file.close();
     }
 

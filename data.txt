@@ -3,13 +3,10 @@ user=Dmitri Fucker
 user_id=345345345
 book=Test frii
 book_id=672
-time=13.11.2016
-book=Some more Danua
-book_id=4562
-time=13.09.2016
-book=Some Book
-book_id=567567
-time=15.11.2016
+time=16.11.2016
+book=Vampire diares
+book_id=235
+time=16.10.2016
 
 user=Danya
 user_id=5745
@@ -29,5 +26,7 @@ book=Soome Free Book
 book_id=57979
 time=15.11.2016
 
-book_free_book=Vampire diares
-book_id=235
+book_free_book=Some more Danua
+book_free_book_id=4562
+book_free_book=Some Book
+book_free_book_id=567567
