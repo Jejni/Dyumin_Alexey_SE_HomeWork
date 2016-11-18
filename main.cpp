@@ -99,20 +99,21 @@ public:
     library() : obj_name("default_library") {}
 
     bool can_give(user &get_user, const book &get_book) const {
-        return check_date(get_user) && check_book_number(get_user) && check_book_free(get_book);
+        return check_user_date(get_user) && check_book_number(get_user) && check_book_free(get_book);
     }
 
-    bool check_date(user &get_user) const {
+    bool check_user_date(user &get_user) const {
         for (auto owns_id = get_user.get_owns().begin(); owns_id != get_user.get_owns().end(); owns_id++) {
-            cout << *owns_id << endl;
             for (auto book = books.begin(); book != books.end(); book++) {
-                if (book->get_id() == *owns_id) {
-                    //2628002.88 - число секунд в месяце
-                    if (difftime(time(0), book->get_owned_date_time_t()) / 2628002.88 >= 1) return false;
-                }
+                if (book->get_id() == *owns_id && !check_book_date(*book)) return check_book_date(*book);
             }
         }
         return true;
+    }
+
+    bool check_book_date(const book &get_book) const {
+        //2628002.88 - число секунд в месяце
+        return (difftime(time(0), get_book.get_owned_date_time_t()) / 2628002.88 < 1);
     }
 
     bool check_book_number(const user &get_user) const {
@@ -135,19 +136,18 @@ public:
 
     controller() { read_from_disc(); }
 
-    bool bad_book_number(int get_index) { return get_index > lib.get_books().size(); }
+    bool bad_book_number(int get_index) { return get_index > lib.get_books().size() - 1; }
 
-    bool bad_user_number(int get_index) { return get_index > lib.get_users().size(); }
+    bool bad_user_number(int get_index) { return get_index > lib.get_users().size() - 1; }
 
-    bool give_book(int book_index, int user_index) {
-        if (bad_book_number(book_index) || bad_user_number(user_index)) return false;
-        book_index -= 1;
-        user_index -= 1;
-
+    bool give_book(int book_number, int user_number) {
+        book_number -= 1;
+        user_number -= 1;
+        if (bad_book_number(book_number) || bad_user_number(user_number)) return false;
         auto book_it = lib.get_books().begin();
         auto user_it = lib.get_users().begin();
-        for (int i = 0; (i < book_index) && (book_it != lib.get_books().end()); i++, book_it++);
-        for (int i = 0; (i < user_index) && (user_it != lib.get_users().end()); i++, user_it++);
+        for (int i = 0; (i < book_number) && (book_it != lib.get_books().end()); i++, book_it++);
+        for (int i = 0; (i < user_number) && (user_it != lib.get_users().end()); i++, user_it++);
 
         if (lib.can_give(*user_it, *book_it)) {
             user_it->add_book(book_it->get_id());
@@ -157,19 +157,37 @@ public:
         return true;
     }
 
-    bool return_book(int book_index) {
-        if (book_index > lib.get_books().size()) return false;
-
-        book_index -= 1;
-
+    bool return_book(int book_number) {
+        book_number -= 1;
+        if (bad_book_number(book_number)) return false;
         auto it = lib.get_books().begin();
-        for (int i = 0; (i < book_index) && (it != lib.get_books().end()); i++, it++);
+        for (int i = 0; (i < book_number) && (it != lib.get_books().end()); i++, it++);
         if (it->is_free()) return false;
         get_user_ref(it->get_owner()).return_book(it->get_id());
         it->free();
         write_on_disc();
         return true;
     }
+
+    bool return_book(string book_id) {
+        auto it = lib.get_books().begin();
+        for (; it->get_id() != book_id; it++);
+        if (it->is_free()) return false;
+        get_user_ref(it->get_owner()).return_book(it->get_id());
+        it->free();
+        write_on_disc();
+        return true;
+    }
+
+    bool return_book(string u_number, string b_number) {
+        int user_index = stoi(u_number) - 1, book_index = stoi(b_number) - 1;
+        if (bad_user_number(user_index)) return false;
+        int check = get_user_ref(user_index).get_owns().size() - 1;
+        if (check < book_index) return false;
+        b_number = get_user_ref(user_index).get_owns()[book_index];
+        return return_book(b_number);
+    }
+
 
     void read_from_disc(string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data.txt") {
         fstream file(path, ios::in);
@@ -215,10 +233,7 @@ public:
                 lib.get_books().push_back(temp);
             }
         }
-
-        file.
-
-                close();
+        file.close();
     }
 
     void write_on_disc(string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data.txt") {
@@ -249,9 +264,53 @@ public:
             cout << i << ": " << it->get_name() << " (" << it->get_books_number() << ")" << endl;
     }
 
+    void show_bad_users() {
+        int i = 1;
+        for (auto it = lib.get_users().begin(); it != lib.get_users().end(); it++, i++) {
+            if (!lib.check_user_date(*it)) {
+                cout << i << ": " << it->get_name() << " (" << it->get_books_number() << ")" << endl;
+                for (auto b_it = it->get_owns().begin(); b_it != it->get_owns().end(); b_it++) {
+                    book &book = get_book_ref(*b_it);
+                    if (!lib.check_book_date(book))
+                        cout << "\t" << book.get_name() << " " << book.get_owned_date() << endl;
+                }
+            }
+        }
+    }
+
+    void show_user_books(string u_index) {
+        int user_undex = stoi(u_index) - 1;
+        if (bad_user_number(user_undex)) return;
+
+        auto user_it = lib.get_users().begin();
+        for (int i = 0; i < user_undex; i++, user_it++);
+        int i = 1;
+        for (auto book_it = lib.get_books().begin(); book_it != lib.get_books().end(); book_it++, i++) {
+            if (book_it->get_owner() == user_it->get_id())
+                cout << i << ": " << book_it->get_name() << endl;
+        }
+    }
+
+
     user &get_user_ref(const string &id) {
         for (auto it = lib.get_users().begin(); it != lib.get_users().end(); it++) if (it->get_id() == id) return *it;
         user *temp = new user("free");
+        return *temp;
+    }
+
+    user &get_user_ref(int index) {
+        if (bad_user_number(index)) {
+            user *temp = new user("free");
+            return *temp;
+        }
+        auto it = lib.get_users().begin();
+        for (int i = 0; i < index; i++, it++);
+        return *it;
+    }
+
+    book &get_book_ref(const string &id) {
+        for (auto it = lib.get_books().begin(); it != lib.get_books().end(); it++) if (it->get_id() == id) return *it;
+        book *temp = new book("free");
         return *temp;
     }
 
@@ -260,7 +319,6 @@ public:
         for (auto it = lib.get_books().begin(); it != lib.get_books().end(); it++, i++)
             cout << i << ": " << it->get_name() << " (" << get_user_ref(it->get_owner()).get_name() << ")" << endl;
     }
-
 };
 
 class view {
@@ -269,7 +327,95 @@ public:
 
     void show_users() { con.show_users(); }
 
+    void show_bad_users() { con.show_bad_users(); }
+
     void show_books() { con.show_books(); }
+
+    string user_select_menu(string user_number) {
+        string choice;
+        cout << "\nActions: list user's books - 1, free book - 2, add book - 3, back - q: ";
+        cin >> choice;
+
+        switch (*choice.c_str()) {
+            case '1': {
+                con.show_user_books(user_number);
+                break;
+            }
+            case '2': {
+                string book_number;
+                cout << "Book number: ";
+                cin >> book_number;
+
+                if (con.return_book(user_number, book_number)) cout << "Done!\n";
+                else cout << "Error!\n";
+                return user_select_menu(user_number);
+            }
+            case '3': {
+                show_books();
+                string book_number;
+                cout << "Book number: ";
+                cin >> book_number;
+
+                if (con.give_book(stoi(book_number), stoi(user_number))) cout << "Done!\n";
+                else cout << "Error!\n";
+                break;
+            }
+            case 'q': {
+                return "user_select_menu_back";
+            }
+
+            default: {
+                cout << "Error!\n";
+                return user_select_menu(user_number);
+            }
+        }
+        return user_select_menu(user_number);
+    }
+
+    string user_select_menu() {
+        string user_number;
+        cout << "User number: ";
+        cin >> user_number;
+
+        string choice;
+        cout << "\nActions: list user's books - 1, free book - 2, add book - 3, back - q: ";
+        cin >> choice;
+
+        switch (*choice.c_str()) {
+            case '1': {
+                con.show_user_books(user_number);
+                break;
+            }
+            case '2': {
+                string book_number;
+                cout << "Book number: ";
+                cin >> book_number;
+
+                if (con.return_book(user_number, book_number)) cout << "Done!\n";
+                else cout << "Error!\n";
+                return user_select_menu(user_number);
+            }
+            case '3': {
+                show_books();
+                string book_number;
+                cout << "Book number: ";
+                cin >> book_number;
+
+                if (con.give_book(stoi(book_number), stoi(user_number))) cout << "Done!\n";
+                else cout << "Error!\n";
+                break;
+            }
+            case 'q': {
+                return "user_select_menu_back";
+            }
+
+            default: {
+                cout << "Error!\n";
+                return user_select_menu(user_number);
+            }
+        }
+        return user_select_menu(user_number);
+    }
 
     string books_give_menu(int book_index) {
         show_users();
@@ -280,9 +426,8 @@ public:
 
         if (choice == "q") return "books_give_menu_back";
 
-        if (con.give_book(book_index, stoi(choice))) {
-            cout << "Done!\n";
-        } else cout << "Error!\n";
+        if (con.give_book(book_index, stoi(choice))) cout << "Done!\n";
+        else cout << "Error!\n";
         return "books_give_menu_back";
     }
 
@@ -312,7 +457,7 @@ public:
     }
 
     string books_select_menu() {
-        int book_number;
+        string book_number;
         cout << "Book number: ";
         cin >> book_number;
 
@@ -322,19 +467,19 @@ public:
 
         switch (*choice.c_str()) {
             case '1': {
-                if (con.return_book(book_number)) cout << "Done!\n";
+                if (con.return_book(stoi(book_number))) cout << "Done!\n";
                 else cout << "Error!\n";
                 return "books_menu";
             }
             case '2': {
-                return books_give_menu(book_number);
+                return books_give_menu(stoi(book_number));
             }
             case 'q': {
                 return "books_select_menu_back";
             }
             default: {
                 cout << "Error!\n";
-                return books_select_menu(book_number);
+                return books_select_menu(stoi(book_number));
             }
         }
     }
@@ -364,7 +509,7 @@ public:
 
     string users_menu() {
         string choice;
-        cout << "\nList users - 1, Select user - 2, back - q: ";
+        cout << "\nList users - 1, Select user - 2, List bad users - 3, back - q: ";
         cin >> choice;
 
         switch (*choice.c_str()) {
@@ -373,7 +518,10 @@ public:
                 break;
             }
             case '2': {
-
+                return user_select_menu();
+            }
+            case '3': {
+                show_bad_users();
                 break;
             }
             case 'q': {
@@ -413,7 +561,7 @@ public:
         string menu = "main";
         for (;;) {
             if (menu == "main" || menu == "users_menu_back" || menu == "books_menu_back") menu = main_menu();
-            else if (menu == "users_menu") menu = users_menu();
+            else if (menu == "users_menu" || menu == "user_select_menu_back") menu = users_menu();
             else if (menu == "books_menu" || menu == "books_select_menu_back" || menu == "books_give_menu_back")
                 menu = books_menu();
             else if (menu == "quit") {
