@@ -6,13 +6,8 @@
 #include <sstream>
 #include <vector>
 #include <list>
-
-#include "cereal/archives/binary.hpp"
-#include "cereal/types/unordered_map.hpp"
-#include "cereal/types/memory.hpp"
-#include "cereal/archives/binary.hpp"
+//#include <cereal/archives/binary.hpp>
 #include <fstream>
-
 
 using namespace std;
 
