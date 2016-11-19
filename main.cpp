@@ -7,34 +7,41 @@
 #include <vector>
 #include <list>
 
+#include "cereal/archives/binary.hpp"
+#include "cereal/types/unordered_map.hpp"
+#include "cereal/types/memory.hpp"
+#include "cereal/archives/binary.hpp"
+#include <fstream>
+
+
 using namespace std;
 
-class obj_name {
-    string name, obj_id;
+class default_info {
+    string name, object_id;
 public:
-    obj_name() {
+    default_info() {
         name = "default_name";
-        obj_id = "";
+        object_id = "";
     }
 
-    obj_name(const string &get_name) { set_name(get_name); }
+    default_info(const string &get_name) { set_name(get_name); }
 
     void set_name(const string &get_name) { name = get_name; }
 
-    void set_id(const string &get_id) { obj_id = get_id; }
+    void set_id(const string &get_id) { object_id = get_id; }
 
-    const string &get_name() const { return name; }
+    string &get_name() const { return name; }
 
-    const string &get_id() const { return obj_id; }
+    string &get_id() const { return object_id; }
 };
 
 class book;
 
-class user : public obj_name {
+class user : public default_info {
     vector<string> owns;
 public:
 
-    user(const string &get_name) : obj_name(get_name) {}
+    user(const string &get_name) : default_info(get_name) {}
 
     void add_book(const string &get_book_id) { owns.push_back(get_book_id); }
 
@@ -49,26 +56,26 @@ public:
         }
     }
 
-    int get_books_number() const { return owns.size(); }
+    int get_number_of_books() const { return owns.size(); }
 };
 
-class book : public obj_name {
-    string owner;
+class book : public default_info {
+    string owner_id;
     time_t owned_date;
 public:
 
-    book(const string get_name) : obj_name(get_name) { assign_owner("", 0); }
+    book(const string get_name) : default_info(get_name) { assign_owner("", 0); }
 
-    const string get_owner() const {
+    string get_owner() const {
         if (is_free()) return "free";
-        else { return owner; }
+        else return owner_id;
     }
 
     void set_owned_date(const time_t &get_time) { owned_date = get_time; }
 
-    const time_t &get_owned_date_time_t() const { return owned_date; }
+    time_t &get_owned_date_time_t() const { return owned_date; }
 
-    const string get_owned_date() const {
+    string &get_owned_date() const {
         int max_size = 11;
         char *temp = new char(max_size);
         strftime(temp, max_size, "%e.%m.%Y", localtime(&owned_date));
@@ -76,36 +83,37 @@ public:
         return temp_str;
     }
 
-    void assign_owner(const string &get_user, const time_t &get_time) {
-        owner = get_user;
+    void assign_owner(const string &get_user_id, const time_t &get_time) {
+        owner_id = get_user_id;
         owned_date = get_time;
     }
 
-    void assign_owner(const string &get_user) { owner = get_user; }
+    void assign_owner(const string &get_user_id) { owner_id = get_user_id; }
 
     void free() {
-        owner = "";
+        owner_id = "";
         owned_date = 0;
     }
 
-    bool is_free() const { return owner.length() == 0; }
+    bool is_free() const { return owner_id.length() == 0; }
 };
 
 
-class library : public obj_name {
+class library : public default_info {
     list <book> books;
     list <user> users;
 public:
-    library() : obj_name("default_library") {}
+    library() : default_info("default_library") {}
 
     bool can_give(user &get_user, const book &get_book) const {
-        return check_user_date(get_user) && check_book_number(get_user) && check_book_free(get_book);
+        return check_user_date(get_user) && check_number_of_books(get_user) && check_book_free(get_book);
     }
 
     bool check_user_date(user &get_user) const {
-        for (auto owns_id = get_user.get_owns().begin(); owns_id != get_user.get_owns().end(); owns_id++) {
+        for (auto owned_book_id = get_user.get_owns().begin();
+             owned_book_id != get_user.get_owns().end(); owned_book_id++) {
             for (auto book = books.begin(); book != books.end(); book++) {
-                if (book->get_id() == *owns_id && !check_book_date(*book)) return check_book_date(*book);
+                if (book->get_id() == *owned_book_id && !check_book_date(*book)) return check_book_date(*book);
             }
         }
         return true;
@@ -116,8 +124,8 @@ public:
         return (difftime(time(0), get_book.get_owned_date_time_t()) / 2628002.88 < 1);
     }
 
-    bool check_book_number(const user &get_user) const {
-        return get_user.get_books_number() < 3;
+    bool check_number_of_books(const user &get_user) const {
+        return get_user.get_number_of_books() < 3;
     }
 
     bool check_book_free(const book &get_book) const {
@@ -136,14 +144,42 @@ public:
 
     controller() { read_from_disc(); }
 
-    bool bad_book_number(int get_index) { return get_index > lib.get_books().size() - 1; }
+    // This method lets cereal know which data members to serialize
+    template<class Archive>
+    void serialize(Archive &archive) {
+        archive(lib.get_books(), lib.get_users()); // serialize things by passing them to the archive
+    }
 
-    bool bad_user_number(int get_index) { return get_index > lib.get_users().size() - 1; }
+    void serial(string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data.bin"){
+        fstream file(path, ios::out);
+        if (!file.is_open()) {
+            cout << "Error, can't write file!";
+            return;
+        }
+
+
+            cereal::BinaryOutputArchive oarchive(ss); // Create an output archive
+
+            MyData m1, m2, m3;
+            oarchive(m1, m2, m3); // Write the data to the archive
+         // archive goes out of scope, ensuring all contents are flushed
+
+
+            cereal::BinaryInputArchive iarchive(ss); // Create an input archive
+
+            MyData m1, m2, m3;
+            iarchive(m1, m2, m3); // Read the data from the archive
+
+    }
+
+    bool check_book_index(int get_index) { return get_index > lib.get_books().size() - 1; }
+
+    bool check_user_index(int get_index) { return get_index > lib.get_users().size() - 1; }
 
     bool give_book(int book_number, int user_number) {
         book_number -= 1;
         user_number -= 1;
-        if (bad_book_number(book_number) || bad_user_number(user_number)) return false;
+        if (check_book_index(book_number) || check_user_index(user_number)) return false;
         auto book_it = lib.get_books().begin();
         auto user_it = lib.get_users().begin();
         for (int i = 0; (i < book_number) && (book_it != lib.get_books().end()); i++, book_it++);
@@ -159,7 +195,7 @@ public:
 
     bool return_book(int book_number) {
         book_number -= 1;
-        if (bad_book_number(book_number)) return false;
+        if (check_book_index(book_number)) return false;
         auto it = lib.get_books().begin();
         for (int i = 0; (i < book_number) && (it != lib.get_books().end()); i++, it++);
         if (it->is_free()) return false;
@@ -181,7 +217,7 @@ public:
 
     bool return_book(string u_number, string b_number) {
         int user_index = stoi(u_number) - 1, book_index = stoi(b_number) - 1;
-        if (bad_user_number(user_index)) return false;
+        if (check_user_index(user_index)) return false;
         int check = get_user_ref(user_index).get_owns().size() - 1;
         if (check < book_index) return false;
         b_number = get_user_ref(user_index).get_owns()[book_index];
@@ -261,14 +297,14 @@ public:
     void show_users() {
         int i = 1;
         for (auto it = lib.get_users().begin(); it != lib.get_users().end(); it++, i++)
-            cout << i << ": " << it->get_name() << " (" << it->get_books_number() << ")" << endl;
+            cout << i << ": " << it->get_name() << " (" << it->get_number_of_books() << ")" << endl;
     }
 
     void show_bad_users() {
         int i = 1;
         for (auto it = lib.get_users().begin(); it != lib.get_users().end(); it++, i++) {
             if (!lib.check_user_date(*it)) {
-                cout << i << ": " << it->get_name() << " (" << it->get_books_number() << ")" << endl;
+                cout << i << ": " << it->get_name() << " (" << it->get_number_of_books() << ")" << endl;
                 for (auto b_it = it->get_owns().begin(); b_it != it->get_owns().end(); b_it++) {
                     book &book = get_book_ref(*b_it);
                     if (!lib.check_book_date(book))
@@ -280,7 +316,7 @@ public:
 
     void show_user_books(string u_index) {
         int user_undex = stoi(u_index) - 1;
-        if (bad_user_number(user_undex)) return;
+        if (check_user_index(user_undex)) return;
 
         auto user_it = lib.get_users().begin();
         for (int i = 0; i < user_undex; i++, user_it++);
@@ -299,7 +335,7 @@ public:
     }
 
     user &get_user_ref(int index) {
-        if (bad_user_number(index)) {
+        if (check_user_index(index)) {
             user *temp = new user("free");
             return *temp;
         }
@@ -327,10 +363,16 @@ public:
 
     void show_users() { con.show_users(); }
 
+    /*
+   Пользователи с просроченными книгами.
+   */
     void show_bad_users() { con.show_bad_users(); }
 
     void show_books() { con.show_books(); }
 
+    /*
+   Перегрузка, чтобы не вводить зановво номер пользователя.
+   */
     string user_select_menu(string user_number) {
         string choice;
         cout << "\nActions: list user's books - 1, free book - 2, add book - 3, back - q: ";
@@ -557,7 +599,12 @@ public:
         }
     }
 
+    /*
+     Бесконечный цикл меню с условием выхода
+     Каждое из подменю возвращает строку для мониторинга местонахождения пользователя     
+     */
     void start_routine() {
+
         string menu = "main";
         for (;;) {
             if (menu == "main" || menu == "users_menu_back" || menu == "books_menu_back") menu = main_menu();
