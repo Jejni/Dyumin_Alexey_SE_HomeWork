@@ -150,27 +150,27 @@ public:
         archive(lib.get_books(), lib.get_users()); // serialize things by passing them to the archive
     }
 
-    void serial(string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data.bin"){
-        fstream file(path, ios::out);
-        if (!file.is_open()) {
-            cout << "Error, can't write file!";
-            return;
-        }
-
-
-            cereal::BinaryOutputArchive oarchive(ss); // Create an output archive
-
-            MyData m1, m2, m3;
-            oarchive(m1, m2, m3); // Write the data to the archive
-         // archive goes out of scope, ensuring all contents are flushed
-
-
-            cereal::BinaryInputArchive iarchive(ss); // Create an input archive
-
-            MyData m1, m2, m3;
-            iarchive(m1, m2, m3); // Read the data from the archive
-
-    }
+//    void serial(string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data.bin"){
+//        fstream file(path, ios::out);
+//        if (!file.is_open()) {
+//            cout << "Error, can't write file!";
+//            return;
+//        }
+//
+//
+//            cereal::BinaryOutputArchive oarchive(file); // Create an output archive
+//
+//            //MyData m1, m2, m3;
+//            oarchive(m1, m2, m3); // Write the data to the archive
+//         // archive goes out of scope, ensuring all contents are flushed
+//
+//
+//            cereal::BinaryInputArchive iarchive(ss); // Create an input archive
+//
+//            MyData m1, m2, m3;
+//            iarchive(m1, m2, m3); // Read the data from the archive
+//
+//    }
 
     bool check_book_index(int get_index) { return get_index > lib.get_books().size() - 1; }
 
