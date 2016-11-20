@@ -4,14 +4,17 @@
 #include <time.h>
 #include <fstream>
 #include <sstream>
-#include <vector>
 #include <list>
-//#include <cereal/archives/binary.hpp>
-#include <fstream>
+#include <cereal/types/list.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/archives/portable_binary.hpp>
 
 using namespace std;
 
 class default_info {
+    //for serialisation
+protected:
     string name, object_id;
 public:
     default_info() {
@@ -25,9 +28,9 @@ public:
 
     void set_id(const string &get_id) { object_id = get_id; }
 
-    string &get_name() const { return name; }
+    const string &get_name() const { return name; }
 
-    string &get_id() const { return object_id; }
+    const string &get_id() const { return object_id; }
 };
 
 class book;
@@ -35,6 +38,7 @@ class book;
 class user : public default_info {
     vector<string> owns;
 public:
+    user() {}
 
     user(const string &get_name) : default_info(get_name) {}
 
@@ -52,12 +56,23 @@ public:
     }
 
     int get_number_of_books() const { return owns.size(); }
+
+    template<class Archive>
+    void serialize(Archive &archive) {
+        archive(owns, name, object_id); // serialize things by passing them to the archive
+    }
 };
 
 class book : public default_info {
     string owner_id;
     time_t owned_date;
 public:
+    book() {}
+
+    template<class Archive>
+    void serialize(Archive &archive) {
+        archive(owner_id, owned_date, name, object_id); // serialize things by passing them to the archive
+    }
 
     book(const string get_name) : default_info(get_name) { assign_owner("", 0); }
 
@@ -68,9 +83,9 @@ public:
 
     void set_owned_date(const time_t &get_time) { owned_date = get_time; }
 
-    time_t &get_owned_date_time_t() const { return owned_date; }
+    const time_t &get_owned_date_time_t() const { return owned_date; }
 
-    string &get_owned_date() const {
+    string get_owned_date() const {
         int max_size = 11;
         char *temp = new char(max_size);
         strftime(temp, max_size, "%e.%m.%Y", localtime(&owned_date));
@@ -130,42 +145,41 @@ public:
     list <book> &get_books() { return books; }
 
     list <user> &get_users() { return users; }
+
+    template<class Archive>
+    void serialize(Archive &archive) {
+        archive(books, users); // serialize things by passing them to the archive
+    }
 };
 
 
 class controller {
     library lib;
 public:
-
     controller() { read_from_disc(); }
 
-    // This method lets cereal know which data members to serialize
-    template<class Archive>
-    void serialize(Archive &archive) {
-        archive(lib.get_books(), lib.get_users()); // serialize things by passing them to the archive
+
+    void serial(string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data.bin") {
+        ofstream file(path, ios::binary);
+        if (!file.is_open()) {
+            cout << "Error, can't write file!";
+            return;
+        }
+        cereal::PortableBinaryOutputArchive oarchive(file); // Create an output archive
+        oarchive(lib); // Write the data to the archive
+        file.close();
     }
 
-//    void serial(string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data.bin"){
-//        fstream file(path, ios::out);
-//        if (!file.is_open()) {
-//            cout << "Error, can't write file!";
-//            return;
-//        }
-//
-//
-//            cereal::BinaryOutputArchive oarchive(file); // Create an output archive
-//
-//            //MyData m1, m2, m3;
-//            oarchive(m1, m2, m3); // Write the data to the archive
-//         // archive goes out of scope, ensuring all contents are flushed
-//
-//
-//            cereal::BinaryInputArchive iarchive(ss); // Create an input archive
-//
-//            MyData m1, m2, m3;
-//            iarchive(m1, m2, m3); // Read the data from the archive
-//
-//    }
+    void usserial(string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data.bin") {
+        ifstream file(path, ios::binary);
+        if (!file.is_open()) {
+            cout << "Error, can't write file!";
+            return;
+        }
+        cereal::PortableBinaryInputArchive iarchive(file); // Create an input archive
+        iarchive(lib); // Read the data from the archive
+        file.close();
+    }
 
     bool check_book_index(int get_index) { return get_index > lib.get_books().size() - 1; }
 
@@ -221,50 +235,51 @@ public:
 
 
     void read_from_disc(string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data.txt") {
-        fstream file(path, ios::in);
-        if (!file.is_open()) {
-            cout << "Error, can't open file!";
-            return;
-        }
-        for (string line; getline(file, line);) {
-
-            if (line.length() == 0) continue;
-
-            string type = line.substr(0, line.find("="));
-            string get_data = line.substr(line.find("=") + 1, line.length());
-
-            if (type == "user") {
-                user temp(get_data);
-                lib.get_users().push_back(temp);
-            } else if (type == "book") {
-                book temp(get_data);
-                lib.get_books().push_back(temp);
-                lib.get_books().back().assign_owner(lib.get_users().back().get_id());
-            } else if (type == "user_id") {
-                lib.get_users().back().set_id(get_data);
-            } else if (type == "book_id") {
-                lib.get_books().back().set_id(get_data);
-                lib.get_users().back().add_book(lib.get_books().back().get_id());
-            } else if (type == "book_free_book_id") {
-                lib.get_books().back().set_id(get_data);
-            } else if (type == "time") {
-                stringstream ss(get_data);
-                vector<string> temp;
-                string temp_str;
-                while (getline(ss, temp_str, '.')) temp.push_back(temp_str);
-
-                struct tm *mtm = new tm;
-                mktime(mtm);
-                mtm->tm_mday = stoi(temp[0]);
-                mtm->tm_mon = stoi(temp[1]) - 1;
-                mtm->tm_year = stoi(temp[2]) - 1900;
-                lib.get_books().back().set_owned_date(mktime(mtm));
-            } else if (type == "book_free_book") {
-                book temp(get_data);
-                lib.get_books().push_back(temp);
-            }
-        }
-        file.close();
+        usserial();
+//        fstream file(path, ios::in);
+//        if (!file.is_open()) {
+//            cout << "Error, can't open file!";
+//            return;
+//        }
+//        for (string line; getline(file, line);) {
+//
+//            if (line.length() == 0) continue;
+//
+//            string type = line.substr(0, line.find("="));
+//            string get_data = line.substr(line.find("=") + 1, line.length());
+//
+//            if (type == "user") {
+//                user temp(get_data);
+//                lib.get_users().push_back(temp);
+//            } else if (type == "book") {
+//                book temp(get_data);
+//                lib.get_books().push_back(temp);
+//                lib.get_books().back().assign_owner(lib.get_users().back().get_id());
+//            } else if (type == "user_id") {
+//                lib.get_users().back().set_id(get_data);
+//            } else if (type == "book_id") {
+//                lib.get_books().back().set_id(get_data);
+//                lib.get_users().back().add_book(lib.get_books().back().get_id());
+//            } else if (type == "book_free_book_id") {
+//                lib.get_books().back().set_id(get_data);
+//            } else if (type == "time") {
+//                stringstream ss(get_data);
+//                vector<string> temp;
+//                string temp_str;
+//                while (getline(ss, temp_str, '.')) temp.push_back(temp_str);
+//
+//                struct tm *mtm = new tm;
+//                mktime(mtm);
+//                mtm->tm_mday = stoi(temp[0]);
+//                mtm->tm_mon = stoi(temp[1]) - 1;
+//                mtm->tm_year = stoi(temp[2]) - 1900;
+//                lib.get_books().back().set_owned_date(mktime(mtm));
+//            } else if (type == "book_free_book") {
+//                book temp(get_data);
+//                lib.get_books().push_back(temp);
+//            }
+//        }
+//        file.close();
     }
 
     void write_on_disc(string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data.txt") {
@@ -287,6 +302,7 @@ public:
             if (it->is_free())
                 file << "\nbook_free_book=" << it->get_name() << "\nbook_free_book_id=" << it->get_id();
         file.close();
+        serial();
     }
 
     void show_users() {
