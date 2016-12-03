@@ -7,15 +7,14 @@
 #include "database/DatabaseSerial.h"
 #include <string>
 
+std::string TextPath = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data/data.txt";
+std::string BinPath = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data/data.bin";
+
 Library::Library(int type) : DefaultInfo("default_library") {
-    if (type == 1) {
-        std::string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data/data.txt";
-        dataBase = new DatabaseTextFile(path);
-    } else if (type == 2) {
-        std::string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data/data.bin";
-        dataBase = new DatabaseSerial(path);
-    }
-//    Database *copy = new DatabaseSerial("/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data/data.bin");
+    if (type == 1) dataBase = new DatabaseTextFile(TextPath);
+    else if (type == 2) dataBase = new DatabaseSerial(BinPath);
+
+//    Database *copy = new DatabaseSerial(BinPath);
 //    *copy = *dataBase;
 //    copy->write_on_disc();
 }
@@ -89,7 +88,8 @@ bool Library::return_book(Book &book) {
 }
 
 Book &Library::get_book_ref(const std::string &id) {
-    for (auto it = dataBase->getBooks().begin(); it != dataBase->getBooks().end(); it++) if (it->getObject_id() == id) return *it;
+    for (auto it = dataBase->getBooks().begin(); it != dataBase->getBooks().end(); it++)
+        if (it->getObject_id() == id)return *it;
     Book *temp = new Book("free");
     return *temp;
 }
@@ -105,7 +105,8 @@ User &Library::get_user_ref(int index) {
 }
 
 User &Library::get_user_ref(const std::string &id) {
-    for (auto it = dataBase->getUsers().begin(); it != dataBase->getUsers().end(); it++) if (it->getObject_id() == id) return *it;
+    for (auto it = dataBase->getUsers().begin(); it != dataBase->getUsers().end(); it++)
+        if (it->getObject_id() == id)return *it;
     User *temp = new User("free");
     return *temp;
 }
