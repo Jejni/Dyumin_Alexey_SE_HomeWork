@@ -1,9 +1,24 @@
 
-User=Dmitri Fucker
-user_id=345345345
-Book=Some more Danua
-book_id=4562
-time=20.11.2016
+user=Roma Makeev
+user_id=56546
+book=Empire of Storms
+book_id=4567
+time= 4.12.2016
+book=Frost Like Night
+book_id=43749679
+time= 4.12.2016
 
-book_free_book=Test frii
-book_free_book_id=672
+user=Marat Tuleev
+user_id=57577
+
+user=Bogdan Salyp
+user_id=21278
+
+book_free_book=The Goal
+book_free_book_id=765853
+book_free_book=The Fever Code
+book_free_book_id=2234
+book_free_book=Crooked Kingdom
+book_free_book_id=57468
+book_free_book=Three Dark Crowns
+book_free_book_id=45757

@@ -33,6 +33,20 @@ public:
     void read_from_disc();
 
     void write_on_disc();
+
+    bool give_book(User &user, Book &book);
+
+    bool check_book_index(int get_index);
+
+    bool check_user_index(int get_index);
+
+    bool return_book(Book &book);
+
+    Book &get_book_ref(const std::string &id);
+
+    User &get_user_ref(int index);
+
+    User &get_user_ref(const std::string &id);
 };
 
 #endif //HW1_LIBRARY_H

@@ -62,3 +62,50 @@ void Library::read_from_disc() {
 void Library::write_on_disc() {
     dataBase->write_on_disc();
 }
+
+bool Library::give_book(User &user, Book &book) {
+    if (can_give(user, book)) {
+        user.add_book(book.getObject_id());
+        book.setOwner_id(user.getObject_id(), time(0));
+    } else return false;
+    write_on_disc();
+    return true;
+}
+
+bool Library::check_book_index(int get_index) {
+    dataBase->check_book_index(get_index);
+}
+
+bool Library::check_user_index(int get_index) {
+    dataBase->check_user_index(get_index);
+}
+
+bool Library::return_book(Book &book) {
+    if (book.is_free()) return false;
+    get_user_ref(book.getOwner_id()).return_book(book.getObject_id());
+    book.free();
+    write_on_disc();
+    return true;
+}
+
+Book &Library::get_book_ref(const std::string &id) {
+    for (auto it = dataBase->getBooks().begin(); it != dataBase->getBooks().end(); it++) if (it->getObject_id() == id) return *it;
+    Book *temp = new Book("free");
+    return *temp;
+}
+
+User &Library::get_user_ref(int index) {
+    if (check_user_index(index)) {
+        User *temp = new User("free");
+        return *temp;
+    }
+    auto it = dataBase->getUsers().begin();
+    for (int i = 0; i < index; i++, it++);
+    return *it;
+}
+
+User &Library::get_user_ref(const std::string &id) {
+    for (auto it = dataBase->getUsers().begin(); it != dataBase->getUsers().end(); it++) if (it->getObject_id() == id) return *it;
+    User *temp = new User("free");
+    return *temp;
+}

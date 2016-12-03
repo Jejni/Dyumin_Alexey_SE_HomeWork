@@ -33,6 +33,14 @@ public:
         books = D.books;
     }
 
+    bool check_book_index(int get_index) {
+        return get_index > books.size() - 1;
+    }
+
+    bool check_user_index(int get_index) {
+        return get_index > users.size() - 1;
+    }
+
     virtual void read_from_disc() = 0;
 
     virtual void write_on_disc() = 0;
