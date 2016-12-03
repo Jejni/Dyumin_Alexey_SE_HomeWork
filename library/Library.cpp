@@ -4,13 +4,20 @@
 
 #include "Library.h"
 #include "database/DatabaseTextFile.h"
+#include "database/DatabaseSerial.h"
 #include <string>
 
 Library::Library(int type) : DefaultInfo("default_library") {
     if (type == 1) {
         std::string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data/data.txt";
         dataBase = new DatabaseTextFile(path);
+    } else if (type == 2) {
+        std::string path = "/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data/data.bin";
+        dataBase = new DatabaseSerial(path);
     }
+//    Database *copy = new DatabaseSerial("/home/alexey/Dropbox/SafeBoard/Software_Engineering/Hw1/data/data.bin");
+//    *copy = *dataBase;
+//    copy->write_on_disc();
 }
 
 bool Library::can_give(User &get_user, const Book &get_book) const {

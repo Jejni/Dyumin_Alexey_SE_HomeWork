@@ -28,6 +28,11 @@ public:
         return users;
     }
 
+    void operator=(const Database &D) {
+        users = D.users;
+        books = D.books;
+    }
+
     virtual void read_from_disc() = 0;
 
     virtual void write_on_disc() = 0;

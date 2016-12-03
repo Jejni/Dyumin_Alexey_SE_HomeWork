@@ -7,7 +7,6 @@
 
 Controller::Controller(int type) {
     lib = new Library(type);
-    read_from_disc();
 }
 
 bool Controller::check_book_index(int get_index) {

@@ -5,10 +5,6 @@
 #ifndef HW1_DATA_BASE_TEXT_FILE_H
 #define HW1_DATA_BASE_TEXT_FILE_H
 
-#include <fstream>
-#include <string>
-#include <iostream>
-#include <sstream>
 #include "Database.h"
 
 class DatabaseTextFile : public Database {

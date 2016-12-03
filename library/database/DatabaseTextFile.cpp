@@ -4,11 +4,14 @@
 
 #include <fstream>
 #include <iostream>
+#include <string>
 #include <sstream>
 #include "Database.h"
 #include "DatabaseTextFile.h"
 
-DatabaseTextFile::DatabaseTextFile(const std::string &path) : Database(path) {}
+DatabaseTextFile::DatabaseTextFile(const std::string &path) : Database(path) {
+    read_from_disc();
+}
 
 void DatabaseTextFile::write_on_disc() {
     std::fstream file(path, std::ios::out);
