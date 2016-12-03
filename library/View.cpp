@@ -256,7 +256,7 @@ void View::start_routine() {
 }
 
 View::View() {
-    std::cout << "Text - 1, Bin - 2: ";
+    std::cout << "Data Source:\n\t Text - 1, Bin - 2: ";
     int type;
     std::cin >> type;
     con = new Controller(type);

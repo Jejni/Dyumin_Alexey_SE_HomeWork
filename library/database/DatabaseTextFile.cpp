@@ -21,10 +21,10 @@ void DatabaseTextFile::write_on_disc() {
     }
 
     for (auto it = users.begin(); it != users.end(); it++) {
-        file << "\nUser=" << it->getName() << "\nuser_id=" << it->getObject_id() << "\n";
+        file << "\nuser=" << it->getName() << "\nuser_id=" << it->getObject_id() << "\n";
         for (auto it2 = books.begin(); it2 != books.end(); it2++)
             if (it2->getOwner_id() == it->getObject_id()) {
-                file << "Book=" << it2->getName() << "\nbook_id=" << it2->getObject_id() << "\ntime="
+                file << "book=" << it2->getName() << "\nbook_id=" << it2->getObject_id() << "\ntime="
                      << it2->getOwned_date_Str() << "\n";
             }
     }
