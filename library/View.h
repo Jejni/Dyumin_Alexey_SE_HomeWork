@@ -5,12 +5,11 @@
 #ifndef HW1_VIEW_H
 #define HW1_VIEW_H
 
-#include "controller.h"
+#include "Controller.h"
 #include <iostream>
 
-class view {
-    controller con;
-
+class View {
+    Controller *con;
 protected:
     void show_users();
 
@@ -45,6 +44,9 @@ public:
      Бесконечный цикл меню с условием выхода
      Каждое из подменю возвращает строку для мониторинга местонахождения пользователя     
      */
+
+    View();
+
     void start_routine();
 };
 

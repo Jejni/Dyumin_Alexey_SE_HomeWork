@@ -1,10 +1,9 @@
 #include <iostream>
-#include "view.h"
+#include "View.h"
 
 int main() {
 
-    view NewViev;
-    NewViev.start_routine();
+    View NewView;
 
     std::cout << std::endl;
     return 0;

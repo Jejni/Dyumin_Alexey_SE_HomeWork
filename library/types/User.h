@@ -5,15 +5,15 @@
 #ifndef HW1_USER_H
 #define HW1_USER_H
 
-#include "default_info.h"
+#include "DefaultInfo.h"
 #include <vector>
 
-class user : public default_info {
+class User : public DefaultInfo {
     std::vector<std::string> owns;
 public:
-    user();
+    User();
 
-    user(const std::string &get_name);
+    User(const std::string &get_name);
 
     void add_book(const std::string &get_book_id);
 

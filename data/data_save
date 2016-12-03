@@ -1,5 +1,5 @@
 
-user=Dmitri Fucker
+User=Dmitri Fucker
 user_id=345345345
 book=Some Book by Danya
 book_id=654654
@@ -11,13 +11,13 @@ book=Some more Danua
 book_id=4562
 time=13.11.2016
 
-user=Danya
+User=Danya
 user_id=5745
 
-user=me
+User=me
 user_id=34534235435345
 
-user=noname
+User=noname
 user_id=3457979345345
 
 book_free_book=Vampire diares

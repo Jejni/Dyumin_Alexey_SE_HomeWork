@@ -7,14 +7,14 @@
 
 #include <string>
 
-class default_info {
+class DefaultInfo {
     //for serialisation
 protected:
     std::string name, object_id;
 public:
-    default_info();
+    DefaultInfo();
 
-    default_info(const std::string &get_name);
+    DefaultInfo(const std::string &get_name);
 
     const std::string &getName() const;
 

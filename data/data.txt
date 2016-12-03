@@ -1,33 +1,9 @@
 
-user=Dmitri Fucker
+User=Dmitri Fucker
 user_id=345345345
-book=Test frii
-book_id=672
-time=20.11.2016
-
-user=Danya
-user_id=5745
-book=biblia
-book_id=2523475
-time=18.11.2016
-book=Some Book by Danya
-book_id=654654
-time=18.11.2014
-
-user=me
-user_id=34534235435345
-book=Some Book
-book_id=567567
-time=20.11.2016
-
-user=noname
-user_id=3457979345345
-book=Vampire diares
-book_id=235
-time=20.11.2016
-book=Soome Free Book
-book_id=57979
-time=20.11.2016
-book=Some more Danua
+Book=Some more Danua
 book_id=4562
 time=20.11.2016
+
+book_free_book=Test frii
+book_free_book_id=672

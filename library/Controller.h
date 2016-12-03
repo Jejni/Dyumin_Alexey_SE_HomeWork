@@ -5,18 +5,13 @@
 #ifndef HW1_CONTROLLER_H
 #define HW1_CONTROLLER_H
 
-#include <cereal/types/list.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/string.hpp>
-#include <cereal/archives/portable_binary.hpp>
-
 #include <string>
-#include "library.h"
+#include "Library.h"
 
-class controller {
-    library lib;
+class Controller {
+    Library *lib;
 public:
-    controller();
+    Controller(int);
 
     bool check_book_index(int get_index);
 
@@ -36,14 +31,17 @@ public:
 
     void show_user_books(std::string u_index);
 
-    user &get_user_ref(const std::string &id);
+    User &get_user_ref(const std::string &id);
 
-    user &get_user_ref(int index);
+    User &get_user_ref(int index);
 
-    book &get_book_ref(const std::string &id);
+    Book &get_book_ref(const std::string &id);
 
     void show_books();
-};
 
+    void read_from_disc();
+
+    void write_on_disc();
+};
 
 #endif //HW1_CONTROLLER_H

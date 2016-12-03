@@ -7,20 +7,20 @@
 
 #include <time.h>
 #include <string>
-#include "default_info.h"
+#include "DefaultInfo.h"
 
-class book : public default_info {
+class Book : public DefaultInfo {
     std::string owner_id, free_str = "free";
     time_t owned_date;
 public:
-    book();
+    Book();
 
     template<class Archive>
     void serialize(Archive &archive) {
         archive(owner_id, owned_date, name, object_id); // serialize things by passing them to the archive
     }
 
-    book(const std::string get_name);
+    Book(const std::string get_name);
 
     void free();
 
